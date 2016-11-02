@@ -9,11 +9,11 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
 public class PassengerAgent extends Agent {
-	
+	// Information of the ride to reserve
 	private String _origin, _destiny, _departTime, _arrivalTime;
-	// The list of known cart/seller agents
+	// The list of known car agents
 	private AID[] sellerAgents;
-        //GUI of passenger agent
+        //GUI of passenget agent
         private PassengerGui myGui;
 
 	// Put agent initializations here
@@ -23,7 +23,7 @@ public class PassengerAgent extends Agent {
             myGui = new PassengerGui(this);
             myGui.showGui();
             
-            System.out.println("Hola! 'Pasajero' "+getAID().getName()+" is ready.");
+            System.out.println("Hola! 'Pasajero' "+getAID().getName()+"!");
             
 
             // Get the title of the book to buy as a start-up argument            
@@ -43,7 +43,7 @@ public class PassengerAgent extends Agent {
                         _arrivalTime = arrivalTime;
                         _destiny = destiny;
                         System.out.println("[" +getAID().getName()+ "]: Intentando apartar campo para " + _destiny+"("+_arrivalTime+")");
-                        // Update the list of carts agents
+                        // Update the list of car agents
                         DFAgentDescription template = new DFAgentDescription();
                         ServiceDescription sd = new ServiceDescription();
                         sd.setType("car-pooling");
@@ -69,20 +69,20 @@ public class PassengerAgent extends Agent {
 
 	/**
 	   Inner class RequestPerformer.
-	   This is the behaviour used by Book-buyer agents to request seller 
-	   agents the target book.
+	   This is the behaviour used by Passenger agents to request car 
+	   agents a ride to the destiny place.
 	 */
 	private class RequestPerformer extends Behaviour {
             private AID bestSeller; // The agent who provides the best offer 
             private int bestPrice;  // The best offered price
-            private int repliesCnt = 0; // The counter of replies from seller agents
+            private int repliesCnt = 0; // The counter of replies from car agents
             private MessageTemplate mt; // The template to receive replies
             private int step = 0;
 
             public void action() {
                 switch (step) {
                 case 0:
-                        // Send the cfp to all sellers
+                        // Send the cfp to all cars
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
                     for (int i = 0; i < sellerAgents.length; ++i) {
                             cfp.addReceiver(sellerAgents[i]);
@@ -97,7 +97,7 @@ public class PassengerAgent extends Agent {
                     step = 1;
                     break;
                 case 1:
-                    // Receive all proposals/refusals from seller agents
+                    // Receive all proposals/refusals from car agents
                     ACLMessage reply = myAgent.receive(mt);
                     if (reply != null) {
                         // Reply received
@@ -125,25 +125,25 @@ public class PassengerAgent extends Agent {
                     }
                     break;
                 case 2:
-                    // Send the purchase order to the seller that provided the best offer
+                    // Send the reservation order to the car that provided the best ride offer
                     ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     order.addReceiver(bestSeller);
                     order.setContent(_destiny);
                     order.setConversationId("car-pool");
                     order.setReplyWith("order"+System.currentTimeMillis());
                     myAgent.send(order);
-                    // Prepare the template to get the purchase order reply
+                    // Prepare the template to get the reservation reply
                     mt = MessageTemplate.and(MessageTemplate.MatchConversationId("car-pool"),
                                     MessageTemplate.MatchInReplyTo(order.getReplyWith()));
                     step = 3;
                     break;
                 case 3:      
-                    // Receive the purchase order reply
+                    // Receive the reservation reply
                     reply = myAgent.receive(mt);
                     if (reply != null) {
-                            // Purchase order reply received
+                            // Reservation reply received
                             if (reply.getPerformative() == ACLMessage.INFORM) {
-                                    // Purchase successful. We can terminate
+                                    // Reservation successful. We can terminate
                                     System.out.println("[" +getAID().getName()+ "]: Campo reservado en carro: "+reply.getSender().getName());
                                     System.out.println("[" +getAID().getName()+ "]: Ruta "+ _origin+"("+_departTime+") -> "+_destiny+", Precio = $"+bestPrice);
                                     myAgent.doDelete();

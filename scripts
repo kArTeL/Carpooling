@@ -1,0 +1,4 @@
+javac -classpath jade.jar *.java
+java -classpath jade.jar:src jade.Boot -gui -agents 'carro:CarAgent;pasajero:PassengerAgent'
+
+java -cp lib\jade.jar;classes jade.Boot -container -host host -port 1099 -agents ping3:examples.PingAgent.PingAgent

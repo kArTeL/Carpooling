@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+/**
+  @author andresjsolano
+ */
 class CarGui extends JFrame {	
 	private CarAgent myAgent;
 	

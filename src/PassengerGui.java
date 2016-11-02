@@ -4,13 +4,10 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-/**
-  @author Giovanni Caire - TILAB
- */
 class PassengerGui extends JFrame {	
     private PassengerAgent myAgent;
 
-    private JTextField originField, destinyField, departureTime, arrivalTime;
+    private JTextField originField, destinyField, arrivalTime;
 
     PassengerGui(PassengerAgent a) {
         super(a.getLocalName());
@@ -37,7 +34,10 @@ class PassengerGui extends JFrame {
                     String of = originField.getText().trim();
                     String df = destinyField.getText().trim();
                     String at = arrivalTime.getText().trim();
-                    myAgent.askForRide(of, df, at);                    
+                    myAgent.askForRide(of, df, at); 
+                    originField.setText("");
+                    destinyField.setText("");
+                    arrivalTime.setText("");
                     setVisible(false);
                 }
                 catch (Exception e) {

@@ -10,12 +10,9 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import java.util.*;
 
 public class CarAgent extends Agent {
-    
-	// The catalogue of rides availables
-        //(maps the title of a book to its price)
+	// The rides a car agent is offering
 	private Map rides;
-        
-	// The GUI by means of which the user can make available seats in his car.
+	// The GUI by means of which the user can add rides
 	private CarGui myGui;
 
 	// Put agent initializations here
@@ -28,9 +25,8 @@ public class CarAgent extends Agent {
             myGui = new CarGui(this);
             myGui.showGui();
 
-            // Register the car in the pool.
+            // Register the car-agent service in the yellow pages
             DFAgentDescription dfd = new DFAgentDescription();
-            
             dfd.setName(getAID());
             ServiceDescription sd = new ServiceDescription();
             sd.setType("car-pooling");
@@ -46,7 +42,7 @@ public class CarAgent extends Agent {
             // Add the behaviour serving queries from passenger agents
             addBehaviour(new OfferRequestsServer());
 
-            // Add the behaviour serving purchase orders from buyer agents
+            // Add the behaviour serving seat resevations from passenger agents
             addBehaviour(new PurchaseOrdersServer());
 	}
 
@@ -66,7 +62,7 @@ public class CarAgent extends Agent {
 	}
 
 	/**
-     This is invoked by the GUI when the user adds a new available seats
+     This is invoked by the GUI when the user adds a new offered ride
      * @param arrivalTime
 	 */
 	public void updateCatalogue(final String origin, final String destiny, final String departureTime ,
@@ -82,10 +78,10 @@ public class CarAgent extends Agent {
 
 	/**
 	   Inner class OfferRequestsServer.
-	   This is the behaviour used by car agents to serve incoming requests 
-	   for offer from passenger agents.
-	   If the requested ride is in the local rides and the car has available seats the car agent replies 
-	   with a PROPOSE message specifying the price. Otherwise a REFUSE message is
+	   This is the behaviour used by Car agents to serve incoming requests 
+	   for offer from passegner agents.
+	   If the requested ride is in the local catalogue the car agent replies 
+	   with a PROPOSE message specifying the price, origin place and departure time. Otherwise a REFUSE message is
 	   sent back.
 	 */
 	private class OfferRequestsServer extends CyclicBehaviour {
@@ -99,13 +95,13 @@ public class CarAgent extends Agent {
                     
                     Ride proposeRide = (Ride) rides.get(destiny);
                     if (proposeRide != null && proposeRide.freeSeats > 0) {
-                        // The requested book is available for sale. Reply with the price
+                        // There are rides to the destiny place. Reply with ride information.
                         reply.setPerformative(ACLMessage.PROPOSE);
                         String proposal = "origin="+proposeRide.origin +";departTime="+proposeRide.getDepartTime()+";arrivalTime="+proposeRide.getArrivalTime()+";price="+proposeRide.price;
                         reply.setContent(proposal);
                     }
                     else {
-                        // The requested book is NOT available for sale.
+                        // There are no rides to the destiny.
                         reply.setPerformative(ACLMessage.REFUSE);
                         reply.setContent("not-available");
                     }
@@ -119,11 +115,11 @@ public class CarAgent extends Agent {
 
 	/**
 	   Inner class PurchaseOrdersServer.
-	   This is the behaviour used by Cart agents to serve incoming 
-	   offer acceptances (i.e. passenger accepts price) from passenger agents.
-	   The Cart agent removes the subtracts a available seat
-	   and replies with an INFORM message to notify the passenger that the
-	   purchase has been sucesfully completed.
+	   This is the behaviour used by Car agents to serve incoming 
+	   offer acceptances (i.e. reserve seats on ride) from passenger agents.
+	   The seller agent reduces the amount of free seats on the given ride 
+	   and replies with an INFORM message to notify the passegner that the
+	   recervation has been sucesfully completed.
 	 */
 	private class PurchaseOrdersServer extends CyclicBehaviour {
 		public void action() {
@@ -134,7 +130,7 @@ public class CarAgent extends Agent {
 				String title = msg.getContent();
 				ACLMessage reply = msg.createReply();
 
-				Ride ride = (Ride) rides.remove(title);
+				Ride ride = (Ride) rides.get(title);
 				if (ride != null && ride.freeSeats > 0) {
                                     ride.freeSeats--;
                                     rides.put(ride.destiny, ride);
@@ -142,7 +138,7 @@ public class CarAgent extends Agent {
                                     System.out.println("[" +getAID().getName()+ "]: Campo en el viaje " + ride.origin + "("+ride.getDepartTime()+") -> " + ride.destiny + "("+ride.getArrivalTime()+") reservado para " + msg.getSender().getName());
 				}
 				else {
-					// The requested book has been sold to another buyer in the meanwhile .
+					// The seat has been taken by other passenger in the meanwhile .
 					reply.setPerformative(ACLMessage.FAILURE);
 					reply.setContent("not-available");
 				}
