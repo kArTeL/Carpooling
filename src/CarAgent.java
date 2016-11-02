@@ -135,7 +135,7 @@ public class CarAgent extends Agent {
                                     ride.freeSeats--;
                                     rides.put(ride.destiny, ride);
                                     reply.setPerformative(ACLMessage.INFORM);
-                                    System.out.println("[" +getAID().getName()+ "]: Campo en el viaje " + ride.origin + "("+ride.getDepartTime()+") -> " + ride.destiny + "("+ride.getArrivalTime()+") reservado para " + msg.getSender().getName());
+                                    System.out.println("[" +getAID().getName()+ "]: Campo en el viaje " + ride.origin + "("+ride.getDepartTime()+") -> " + ride.destiny + "("+ride.getArrivalTime()+") reservado para " + msg.getSender().getName() + " quedan "+ride.freeSeats + " campos disponibles");
 				}
 				else {
 					// The seat has been taken by other passenger in the meanwhile .
